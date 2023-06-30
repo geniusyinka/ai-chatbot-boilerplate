@@ -154,20 +154,23 @@ export default function Home() {
           <div className={styles.convo_body}>
 
             <div className={styles.main_container}>
-              <div className={styles.header}>
-                <p>Ask me anything!</p>
+              <div className='text-center'>
+                <p>Ask me anything! 👨🏽‍💻</p>
               </div>
               {questions.map((question, index) => (
                 <Fragment key={index}>
                   <div className={styles.questions_container}>
                     <div className={styles.questions_body}>
-                      <Image
+                      {/* <Image
                         className={styles.icon}
                         src="/usericon.webp"
                         width={32}
                         height={32}
                         alt="user"
-                      />
+                      /> */}
+                      <div className=" mr-4">
+                        😎
+                      </div>
                       <p className={styles.response_text}>{question}</p>
                     </div>
                   </div>
@@ -175,13 +178,17 @@ export default function Home() {
                   <div className={styles.response_container}>
                     {answers.length > index && (
                       <div className={styles.questions_body}>
-                        <Image
+                        {/* <Image
                           className={styles.icon}
                           src="/usericon.webp"
                           width={32}
                           height={32}
                           alt="user"
-                        />
+                        /> */}
+                        <div className=" mr-4"ß>
+
+                          🤖
+                        </div>
                         <p className={styles.response_text}>{answers[index]}</p>
                       </div>
                     )}
