@@ -12,8 +12,13 @@ import { join, extname, basename } from 'path'
 import { OpenAI } from 'langchain/llms/openai'
 import { ChatOpenAI } from 'langchain/chat_models/openai'
 import { OpenAIEmbeddings } from 'langchain/embeddings/openai'
-import { PromptTemplate } from 'langchain/prompts'
-import { LLMChain, VectorDBQAChain } from 'langchain/chains'
+import {
+  ChatPromptTemplate,
+  HumanMessagePromptTemplate,
+  PromptTemplate,
+  SystemMessagePromptTemplate,
+} from "langchain/prompts"; 
+import { LLMChain, VectorDBQAChain  } from 'langchain/chains'
 
 /* Parsers */
 import { WebBrowser } from 'langchain/tools/webbrowser'
@@ -68,7 +73,7 @@ app.get('/health', async (req, res) => {
 })
 
 // from load
-app.post('/add', async(req, res) => {
+app.post('/add', async (req, res) => {
   let {
     // url = "https://web-archive.southampton.ac.uk/cogprints.org/7150/1/10.1.1.83.5248.pdf",
     url,
@@ -77,61 +82,61 @@ app.post('/add', async(req, res) => {
     chunkSize = 2000,
     chunkOverlap = 250,
     sleep = 0,
-} = req.body
-//  url = "https://www.ifsw.org/wp-content/uploads/2022/05/IFSW-Position-to-which-you-seek-nomin-AutoRecovered-1-1.pdf"
-// const chunkSize = 2000
-// const chunkOverlap = 250
+  } = req.body
+  //  url = "https://www.ifsw.org/wp-content/uploads/2022/05/IFSW-Position-to-which-you-seek-nomin-AutoRecovered-1-1.pdf"
+  // const chunkSize = 2000
+  // const chunkOverlap = 250
 
-const downloadDir = process.env.DIR || 'docs'
+  const downloadDir = process.env.DIR || 'docs'
 
-if (!url) {
+  if (!url) {
     res.json({ message: 'Missing URL' })
     return
-}
+  }
 
-// let encodedCollection = await sanitize(collection)
-let type = getFileType(url)
+  // let encodedCollection = await sanitize(collection)
+  let type = getFileType(url)
 
-if (type === 'PDF') {
+  if (type === 'PDF') {
     try {
-        const filename = getUrlFilename(url)
-        if (!filename) {
-            res.status(400).json({ message: 'The provided URL is not a PDF file.' })
-            return
-        }
-        const filePath = await fetchAndSaveFile(url, filename, downloadDir)
-        
-        const loader = new PDFLoader(filePath, {
-            splitPages: true,
-        })
-        const docs = await loader.load()
-        
-        const textSplitter = new RecursiveCharacterTextSplitter({
-            chunkSize: chunkSize,
-            chunkOverlap: chunkOverlap,
-        })
-        
-        const docOutput = await textSplitter.splitDocuments(docs)            
-        let vectorStore = await FaissStore.fromDocuments(
-            docOutput,
-            new OpenAIEmbeddings(),
-            )
-            // vectorStore = null
-            const directory = "/Users/yinka/Documents/art/ai-chatbot-boilerplate/";
-            await vectorStore.save(directory);
-            console.log('saved!')
+      const filename = getUrlFilename(url)
+      if (!filename) {
+        res.status(400).json({ message: 'The provided URL is not a PDF file.' })
+        return
+      }
+      const filePath = await fetchAndSaveFile(url, filename, downloadDir)
 
-            console.log('✔ Added!')
-            // Return the response to the user
-            res.json({ response: 'added'})
-        } catch (err) {
-            console.error(err)
-            res.json({ message: 'Error processing the PDF' })
-            console.log('Error processing the PDF')
-        }
-    } else (
-        console.log('null!')
-    )
+      const loader = new PDFLoader(filePath, {
+        splitPages: true,
+      })
+      const docs = await loader.load()
+
+      const textSplitter = new RecursiveCharacterTextSplitter({
+        chunkSize: chunkSize,
+        chunkOverlap: chunkOverlap,
+      })
+
+      const docOutput = await textSplitter.splitDocuments(docs)
+      let vectorStore = await FaissStore.fromDocuments(
+        docOutput,
+        new OpenAIEmbeddings(),
+      )
+      // vectorStore = null
+      const directory = "/Users/yinka/Documents/art/ai-chatbot-boilerplate/";
+      await vectorStore.save(directory);
+      console.log('saved!')
+
+      console.log('✔ Added!')
+      // Return the response to the user
+      res.json({ response: 'added' })
+    } catch (err) {
+      console.error(err)
+      res.json({ message: 'Error processing the PDF' })
+      console.log('Error processing the PDF')
+    }
+  } else (
+    console.log('null!')
+  )
 })
 // end
 
@@ -144,17 +149,17 @@ if (type === 'PDF') {
 //       chunkOverlap = 250,
 //       sleep = 0,
 //     } = req.body
-  
+
 //     const downloadDir = process.env.DOCS_DIRECTORY || 'docs'
-  
+
 //     if (!url) {
 //       res.status(500).json({ message: 'Missing URL' })
 //       return
 //     }
-  
+
 //     let encodedCollection = await sanitize(collection)
 //     let type = getFileType(url)
-  
+
 //     if (type === 'URL' || type === 'HTML') {
 //       try {
 //         await addURL(url, encodedCollection, chunkSize, chunkOverlap)
@@ -167,22 +172,22 @@ if (type === 'PDF') {
 //     } else if (type === 'SITEMAP') {
 //       try {
 //         const sitemap = await parseSitmap(url, filter, limit)
-  
+
 //         const asyncFunction = async (item) => {
 //           console.log('\nAdding >>', item)
 //           await addURL(item, encodedCollection, chunkSize, chunkOverlap)
 //         }
-  
+
 //         const iterateAndRunAsync = async (array) => {
 //           for (const item of array) {
 //             await asyncFunction(item)
 //             await sleepWait(sleep)
 //           }
 //         }
-  
+
 //         iterateAndRunAsync(sitemap).then(async () => {
 //           console.log('\nDone! | Collection:', collection)
-  
+
 //           // Return the response to the user
 //           res.json({ response: 'started', collection: collection })
 //         })
@@ -198,26 +203,26 @@ if (type === 'PDF') {
 //           return
 //         }
 //         const filePath = await fetchAndSaveFile(url, filename, downloadDir)
-  
+
 //         const loader = new PDFLoader(filePath, {
 //           splitPages: true,
 //         })
 //         const docs = await loader.load()
-  
+
 //         const textSplitter = new RecursiveCharacterTextSplitter({
 //           chunkSize: chunkSize,
 //           chunkOverlap: chunkOverlap,
 //         })
-  
+
 //         const docOutput = await textSplitter.splitDocuments(docs)
-  
+
 //         /* Clean metadata for OpenSearch */
 //         docOutput.forEach((document) => {
 //           document.metadata.source = basename(document.metadata.source)
 //           delete document.metadata.pdf
 //           delete document.metadata.loc
 //         })
-  
+
 //         let vectorStore = await OpenSearchVectorStore.fromDocuments(
 //           docOutput,
 //           new OpenAIEmbeddings(),
@@ -238,28 +243,28 @@ if (type === 'PDF') {
 //       try {
 //         // Check if the URL points to a file and extract the filename with the extension.
 //         const filename = getUrlFilename(url)
-  
+
 //         if (!filename) {
 //           res.status(400).json({ message: 'The provided URL is not a file URL.' })
 //           return
 //         }
-  
+
 //         const filePath = await fetchAndSaveFile(url, filename, downloadDir)
-  
+
 //         const loader = new UnstructuredLoader(
 //           `${process.env.UNSTRUCTURED_URL}/general/v0/general`,
 //           filePath
 //         )
-  
+
 //         const docs = await loader.load()
-  
+
 //         const textSplitter = new RecursiveCharacterTextSplitter({
 //           chunkSize: chunkSize,
 //           chunkOverlap: chunkOverlap,
 //         })
-  
+
 //         const docOutput = await textSplitter.splitDocuments(docs)
-  
+
 //         /* Clean metadata for OpenSearch */
 //         docOutput.forEach((document) => {
 //           document.metadata.source = document.metadata.filename
@@ -267,7 +272,7 @@ if (type === 'PDF') {
 //           delete document.metadata.category
 //           delete document.metadata.loc
 //         })
-  
+
 //         // Create a new document for the URL
 //         let vectorStore = await OpenSearchVectorStore.fromDocuments(
 //           docOutput,
@@ -312,37 +317,64 @@ app.post('/question', async (req, res) => {
     // openAIApiKey: apiKey
   })
 
+
+
+
+
   let vectorStore
   const directory = process.env.DIR //saved directory in .env file
 
-  try{
+  try {
     vectorStore = await FaissStore.load(
       directory,
       new OpenAIEmbeddings()
     );
-  }catch (err) {
+  } catch (err) {
     vectorStore = null
     console.log('vector store error!')
   }
 
   try {
     if (vectorStore) {
+      const template =
+      "Your are a helpful AI Assistant whose name is Yinka."
+    const prompt = new PromptTemplate({
+      template: template,
+      inputVariables: ['question'],
+    })
       console.log('Using Vector Store')
-      const chain = VectorDBQAChain.fromLLM(llm, vectorStore, {
+
+      const chain = VectorDBQAChain.fromLLM(llm, vectorStore, prompt, {
         k: k,
         returnSourceDocuments: true,
       })
+      const chainb = new LLMChain({ llm: llm, prompt: prompt })
+
       const response = await chain.call({
         query: question,
+        
       })
 
+
       // Get the sources from the response
-      let sources = response.sourceDocuments
-      sources = sources.map((sources) => sources.metadata.source)
-      // Remove duplicates
-      sources = [...new Set(sources)]
+      // let sources = response.sourceDocuments
+      // sources = sources.map((sources) => sources.metadata.source)
+      // // Remove duplicates
+      // sources = [...new Set(sources)]
+
+      //new code
+      let sources = response.sourceDocuments;
+      if (Array.isArray(sources)) {
+        sources = sources.map((source) => source.metadata.source);
+        // Remove duplicates
+        sources = [...new Set(sources)];
+      } else {
+        sources = [];
+      }
+
       console.log('Sources:', sources)
       vectorStore = null
+
       // Return the response to the user
       res.json({ response: response.text, sources })
     } else {
