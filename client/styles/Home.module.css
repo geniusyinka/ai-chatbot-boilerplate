@@ -27,11 +27,13 @@
   border: 1px solid #30373d;
   /* text-align: center;? */
   margin: 10px auto;
+  font-size: 25px;
 }
 
 .response_container {
   background-color: #141619;
   padding: 10px;
+  font-size: 25px;
 
 }
 
